@@ -22,7 +22,7 @@ namespace Grochoska.TimeTween
         public float percentage => Mathf.Clamp01(elapsedTime / _duration);
 
         private Coroutine _update = null;
-        private Action _onEnd = null;
+        private Coroutine _onEnd = null;
 
         internal TimeTween(float duration)
         {
@@ -32,12 +32,14 @@ namespace Grochoska.TimeTween
 
         public void CancelUpdate()
         {
-            TimerRoutiner.Instance.StopCoroutine(_update);
+            if (_update != null)
+                TimerRoutiner.Instance.StopCoroutine(_update);
         }
 
         public void CancelEnd()
         {
-            _onEnd = null;
+            if (_onEnd != null)
+                TimerRoutiner.Instance.StopCoroutine(_onEnd);
         }
 
         public void CancelAll()
@@ -46,16 +48,21 @@ namespace Grochoska.TimeTween
             CancelEnd();
         }
 
-        public void AddRoutine(Action<TimeTween> action)
+        internal void AddRoutine(Action<TimeTween> action)
         {
             _update = TimerRoutiner.Instance.StartCoroutine(Routine(action));
         }
 
-        public void AddListenerOnEnd(Action action)
+        internal void AddListenerOnEnd(Action action)
         {
-            _onEnd = action;
+            _onEnd = TimerRoutiner.Instance.StartCoroutine(EndRoutine(action));
         }
 
+        private IEnumerator EndRoutine(Action action)
+        {
+            yield return new WaitUntil(()=>hasEnded);
+            action?.Invoke();
+        }
 
         private IEnumerator Routine(Action<TimeTween> action)
         {
@@ -65,7 +72,6 @@ namespace Grochoska.TimeTween
                 yield return null;
             }
 
-            _onEnd?.Invoke();
             yield return null;
         }
 

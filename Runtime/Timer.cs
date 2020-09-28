@@ -14,7 +14,7 @@ namespace Grochoska.TimeTween
 
             var countdown = new TimeTween(duration);
 
-            countdown.AddListenerOnEnd(onEnd);
+            if (onEnd != null) countdown.AddListenerOnEnd(onEnd);
             if (whileRunning != null) countdown.AddRoutine(whileRunning);
             return countdown;
         }
