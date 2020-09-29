@@ -15,9 +15,12 @@ namespace Grochoska.TimeTween
 
         private readonly float _duration = 0;
         private readonly float _startTime = 0;
-
+        private bool paused = false;
+        
+        private float pausedTime = 0;
         public bool hasEnded => percentage == 1;
-        public float elapsedTime => Time.time - _startTime;
+        public float elapsedTime => Time.time - _startTime - pausedTime;
+
         public float remainingTime => _duration - elapsedTime;
         public float percentage => Mathf.Clamp01(elapsedTime / _duration);
 
@@ -30,6 +33,16 @@ namespace Grochoska.TimeTween
             _duration = duration;
         }
 
+        public void Pause()
+        {
+            paused = true;
+        }
+        
+        public void Unpause()
+        {
+            paused = false;
+        }
+        
         public void CancelUpdate()
         {
             if (_update != null)
@@ -60,7 +73,7 @@ namespace Grochoska.TimeTween
 
         private IEnumerator EndRoutine(Action action)
         {
-            yield return new WaitUntil(()=>hasEnded);
+            yield return new WaitUntil(() => hasEnded);
             action?.Invoke();
         }
 
@@ -68,7 +81,11 @@ namespace Grochoska.TimeTween
         {
             while (!hasEnded)
             {
-                action.Invoke(this);
+                if (paused)
+                    pausedTime += Time.deltaTime;
+                else
+                    action.Invoke(this);
+
                 yield return null;
             }
 
